@@ -150,19 +150,11 @@ func main() {
 
 	fmt.Printf("\nApply Execution Time Histogram: \n")
 
-	fmt.Printf("[ %d / %d ] %5.1fs: %s\n", counts[0], count, percentiles[0] / 1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[0] / (percentiles[4] / 50)) )))
-	fmt.Printf("[ %d / %d ] %5.1fs: %s\n", counts[1], count, percentiles[1] / 1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[1] / (percentiles[4] / 50)) )))
-	fmt.Printf("[ %d / %d ] %5.1fs: %s\n", counts[2], count, percentiles[2] / 1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[2] / (percentiles[4] / 50)) )))
-	fmt.Printf("[ %d / %d ] %5.1fs: %s\n", counts[3], count, percentiles[3] / 1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[3] / (percentiles[4] / 50)) )))
-	fmt.Printf("[ %d / %d ] %5.1fs: %s\n", counts[4], count, percentiles[4] / 1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[4] / (percentiles[4] / 50)) )))
+	fmt.Printf("p50 [ %4d / %4d ] %10.1fs: %s\n", counts[0], count, percentiles[0] / 1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[0] / (percentiles[4] / 50)) )))
+	fmt.Printf("p75 [ %4d / %4d ] %10.1fs: %s\n", counts[1], count, percentiles[1] / 1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[1] / (percentiles[4] / 50)) )))
+	fmt.Printf("p90 [ %4d / %4d ] %10.1fs: %s\n", counts[2], count, percentiles[2] / 1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[2] / (percentiles[4] / 50)) )))
+	fmt.Printf("p95 [ %4d / %4d ] %10.1fs: %s\n", counts[3], count, percentiles[3] / 1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[3] / (percentiles[4] / 50)) )))
+	fmt.Printf("p99 [ %4d / %4d ] %10.1fs: %s\n", counts[4], count, percentiles[4] / 1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[4] / (percentiles[4] / 50)) )))
 
-	//fmt.Printf("%.1fs\n", p75 / 1000)
-	//fmt.Printf("%.1fs\n", p90 / 1000)
-	//fmt.Printf("%.1fs\n", p95 / 1000)
-	//fmt.Printf("%.1fs\n", p99 / 1000)
-
-	//for _, w := range workspaces {
-	//	w.
-	//}
 }
 

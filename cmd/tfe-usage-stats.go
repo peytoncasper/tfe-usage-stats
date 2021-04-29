@@ -9,6 +9,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -165,7 +166,7 @@ func main() {
 		versionParts := strings.Split(workspace.TerraformVersion, ".")
 
 		majorVersion := versionParts[0] + "." +  versionParts[1]
-		minorVersion := "." + versionParts[2]
+		minorVersion := versionParts[2]
 
 		majorVersions = appendVersion(majorVersion, majorVersions, "down")
 		minorVersions = appendVersion(minorVersion, minorVersions, "up")
@@ -183,7 +184,7 @@ func main() {
 	fmt.Printf("\n%7s\n", "Version Matrix:")
 
 	for _, minorVersion := range minorVersions {
-		fmt.Printf("%6s", minorVersion + " |")
+		fmt.Printf("%6s", "." + minorVersion + " |")
 		for _, majorValue := range majorVersions {
 			if count, ok := versionMatrix[majorValue][minorVersion]; ok {
 				fmt.Printf("%6d", count)
@@ -201,40 +202,46 @@ func main() {
 
 }
 
-func appendVersion(minorVersion string, minorVersions []string, sortDirection string) []string {
-	if len(minorVersions) == 0 {
-		minorVersions = append(minorVersions, minorVersion)
+func appendVersion(version string, versions []string, sortDirection string) []string {
+	if len(versions) == 0 {
+		versions = append(versions, version)
 	}
 
-	for i, v := range minorVersions {
-		if minorVersion == v {
-			return minorVersions
+	for i, v := range versions {
+		if version == v {
+			return versions
 		}
 
 		if sortDirection == "up" {
-			if v < minorVersion {
-				minorVersions = append(minorVersions, "")
-				copy(minorVersions[i + 1:], minorVersions[i:])
-				minorVersions[i] = minorVersion
+			v1, _ := strconv.ParseFloat(v, 64)
+			v2, _ := strconv.ParseFloat(version, 64)
+
+			if v1 < v2 {
+				versions = append(versions, "")
+				copy(versions[i + 1:], versions[i:])
+				versions[i] = version
 
 				break
-			} else if (i + 1) == len(minorVersions) {
-				minorVersions = append(minorVersions, minorVersion)
+			} else if (i + 1) == len(versions) {
+				versions = append(versions, version)
 			}
 		} else if sortDirection == "down" {
-			if v > minorVersion {
-				minorVersions = append(minorVersions, "")
-				copy(minorVersions[i + 1:], minorVersions[i:])
-				minorVersions[i] = minorVersion
+			v1, _ := strconv.ParseFloat(v, 64)
+			v2, _ := strconv.ParseFloat(version, 64)
+
+			if v1 > v2 {
+				versions = append(versions, "")
+				copy(versions[i + 1:], versions[i:])
+				versions[i] = version
 
 				break
-			} else if (i + 1) == len(minorVersions) {
-				minorVersions = append(minorVersions, minorVersion)
+			} else if (i + 1) == len(versions) {
+				versions = append(versions, version)
 			}
 		}
 
 
 	}
 
-	return minorVersions
+	return versions
 }

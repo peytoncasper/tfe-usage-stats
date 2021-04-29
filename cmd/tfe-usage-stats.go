@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	tfe "github.com/hashicorp/go-tfe"
 	"github.com/evandro-slv/go-cli-charts/bar"
+	tfe "github.com/hashicorp/go-tfe"
 	"github.com/peytoncasper/tfe-usage-stats/internal"
 	"log"
 	"math"
@@ -156,5 +156,85 @@ func main() {
 	fmt.Printf("p95 [ %4d / %4d ] %10.1fs: %s\n", counts[3], count, percentiles[3] / 1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[3] / (percentiles[4] / 50)) )))
 	fmt.Printf("p99 [ %4d / %4d ] %10.1fs: %s\n", counts[4], count, percentiles[4] / 1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[4] / (percentiles[4] / 50)) )))
 
+	versionMatrix := map[string]map[string]int{}
+
+	majorVersions := make([]string, 0)
+	minorVersions := make([]string, 0)
+
+	for _, workspace := range workspaces {
+		versionParts := strings.Split(workspace.TerraformVersion, ".")
+
+		majorVersion := versionParts[0] + "." +  versionParts[1]
+		minorVersion := "." + versionParts[2]
+
+		majorVersions = appendVersion(majorVersion, majorVersions, "down")
+		minorVersions = appendVersion(minorVersion, minorVersions, "up")
+
+		if x, ok := versionMatrix[majorVersion]; ok {
+			x[minorVersion] = x[minorVersion] + 1
+		} else {
+			versionMatrix[majorVersion] = map[string]int {
+				minorVersion: 1,
+			}
+
+		}
+	}
+
+	fmt.Printf("\n%7s\n", "Version Matrix:")
+
+	for _, minorVersion := range minorVersions {
+		fmt.Printf("%6s", minorVersion + " |")
+		for _, majorValue := range majorVersions {
+			if count, ok := versionMatrix[majorValue][minorVersion]; ok {
+				fmt.Printf("%6d", count)
+			} else {
+				fmt.Printf("%6s", " ")
+			}
+		}
+		fmt.Printf("\n")
+	}
+
+	fmt.Printf("%6s", " ")
+	for _, v := range majorVersions {
+		fmt.Printf("%6s", v)
+	}
+
 }
 
+func appendVersion(minorVersion string, minorVersions []string, sortDirection string) []string {
+	if len(minorVersions) == 0 {
+		minorVersions = append(minorVersions, minorVersion)
+	}
+
+	for i, v := range minorVersions {
+		if minorVersion == v {
+			return minorVersions
+		}
+
+		if sortDirection == "up" {
+			if v < minorVersion {
+				minorVersions = append(minorVersions, "")
+				copy(minorVersions[i + 1:], minorVersions[i:])
+				minorVersions[i] = minorVersion
+
+				break
+			} else if (i + 1) == len(minorVersions) {
+				minorVersions = append(minorVersions, minorVersion)
+			}
+		} else if sortDirection == "down" {
+			if v > minorVersion {
+				minorVersions = append(minorVersions, "")
+				copy(minorVersions[i + 1:], minorVersions[i:])
+				minorVersions[i] = minorVersion
+
+				break
+			} else if (i + 1) == len(minorVersions) {
+				minorVersions = append(minorVersions, minorVersion)
+			}
+		}
+
+
+	}
+
+	return minorVersions
+}

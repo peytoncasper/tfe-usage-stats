@@ -2,26 +2,28 @@ package internal
 
 import (
 	"context"
-	tfe "github.com/hashicorp/go-tfe"
 	"time"
+
+	tfe "github.com/hashicorp/go-tfe"
 )
 
 func GetRuns(client *tfe.Client, workspaces []*tfe.Workspace) (map[string][]*tfe.Run, error) {
 	runs := map[string][]*tfe.Run{}
 
 	now := time.Now()
-	for i := 0; i <= 5; i++ {
-		runs[now.AddDate(0, i * -1, (now.Day() - 1) * -1).Format("2006-01-02")] = make([]*tfe.Run, 0)
+	for i := 0; i <= 11; i++ {
+		runs[now.AddDate(0, i*-1, (now.Day()-1)*-1).Format("2006-01-02")] = make([]*tfe.Run, 0)
 	}
-
 
 	for _, workspace := range workspaces {
 		err := getWorkspaceRuns(client, workspace, runs)
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 
 		//print(workspaceRuns)
-	//
-	//	runs = append(runs, workspaceRuns...)
+		//
+		//	runs = append(runs, workspaceRuns...)
 	}
 
 	return runs, nil
@@ -41,12 +43,14 @@ func getWorkspaceRuns(client *tfe.Client, workspace *tfe.Workspace, runs map[str
 			},
 		})
 
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 
 		for _, run := range runPage.Items {
 
 			if run.Status == "applied" {
-				key := run.StatusTimestamps.AppliedAt.AddDate(0,0, (run.StatusTimestamps.AppliedAt.Day() - 1) * -1).Format("2006-01-02")
+				key := run.StatusTimestamps.AppliedAt.AddDate(0, 0, (run.StatusTimestamps.AppliedAt.Day()-1)*-1).Format("2006-01-02")
 
 				if list, ok := runs[key]; ok {
 					runs[key] = append(list, run)
@@ -59,30 +63,28 @@ func getWorkspaceRuns(client *tfe.Client, workspace *tfe.Workspace, runs map[str
 
 			//if run.Status == "applied" && run.CostEstimate != nil {
 
-
-
-				//currentRun := &Record {
-				//	OrganizationName:      workspace.Organization.Name,
-				//	WorkspaceId:           workspace.ID,
-				//	WorkspaceName:         workspace.Name,
-				//	RunId:                 run.ID,
-				//	CostEstimateId:        run.CostEstimate.ID,
-				//	IsDestroy:			   run.IsDestroy,
-				//	ProviderCostBreakdown: nil,
-				//	StartTime:             run.StatusTimestamps.AppliedAt,
-				//	EndTime:               time.Time{},
-				//}
-				//
-				//if previousRun != nil {
-				//	currentRun.EndTime = previousRun.StartTime
-				//}
-				//
-				//// Destroy Runs are necessary for calculating Start/End times of Apply runs
-				//// However, they are not needed in the final dataset. Filter out destroy records.
-				//if !currentRun.IsDestroy {
-				//	runs = append(runs, currentRun)
-				//}
-				//previousRun = currentRun
+			//currentRun := &Record {
+			//	OrganizationName:      workspace.Organization.Name,
+			//	WorkspaceId:           workspace.ID,
+			//	WorkspaceName:         workspace.Name,
+			//	RunId:                 run.ID,
+			//	CostEstimateId:        run.CostEstimate.ID,
+			//	IsDestroy:			   run.IsDestroy,
+			//	ProviderCostBreakdown: nil,
+			//	StartTime:             run.StatusTimestamps.AppliedAt,
+			//	EndTime:               time.Time{},
+			//}
+			//
+			//if previousRun != nil {
+			//	currentRun.EndTime = previousRun.StartTime
+			//}
+			//
+			//// Destroy Runs are necessary for calculating Start/End times of Apply runs
+			//// However, they are not needed in the final dataset. Filter out destroy records.
+			//if !currentRun.IsDestroy {
+			//	runs = append(runs, currentRun)
+			//}
+			//previousRun = currentRun
 			//}
 		}
 

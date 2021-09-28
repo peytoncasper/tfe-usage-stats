@@ -3,14 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/evandro-slv/go-cli-charts/bar"
-	tfe "github.com/hashicorp/go-tfe"
-	"github.com/peytoncasper/tfe-usage-stats/internal"
 	"log"
 	"math"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/evandro-slv/go-cli-charts/bar"
+	tfe "github.com/hashicorp/go-tfe"
+	"github.com/peytoncasper/tfe-usage-stats/internal"
 )
 
 func main() {
@@ -27,7 +28,7 @@ func main() {
 
 	config := &tfe.Config{
 		Address: *host,
-		Token: *token,
+		Token:   *token,
 	}
 
 	client, err := tfe.NewClient(config)
@@ -56,7 +57,7 @@ func main() {
 
 	users := map[string]int{}
 	for _, t := range teams {
-		for _, u :=  range t.Users {
+		for _, u := range t.Users {
 			if _, ok := users[u.ID]; ok {
 				users[u.ID] += 1
 			} else {
@@ -65,15 +66,14 @@ func main() {
 		}
 	}
 
-	fmt.Printf("Total Users: %d\n", len(users) - 1)
+	fmt.Printf("Total Users: %d\n", len(users)-1)
+	fmt.Printf("Total Workspaces: %d\n", len(workspaces))
 
 	data := make(map[string]float64)
 
 	for k, v := range runs {
 		data[k] = float64(len(v))
 	}
-
-	fmt.Printf("Succesful Applies per Month: \n")
 
 	graph := bar.Draw(data, bar.Options{
 		Chart: bar.Chart{
@@ -89,19 +89,20 @@ func main() {
 		Precision: 1,
 	})
 	//
-	println(graph)
 
 	histogram := make([]int64, 0)
+	var runsum int64 = 0
 
 	for _, m := range runs {
 		for _, r := range m {
 			t := r.StatusTimestamps.AppliedAt.Sub(r.StatusTimestamps.PlanQueuabledAt).Milliseconds()
+			runsum += 1
 
 			if len(histogram) > 0 {
 				for i := range histogram {
 					if histogram[i] > t {
 						histogram = append(histogram, 0)
-						copy(histogram[i + 1:], histogram[i:])
+						copy(histogram[i+1:], histogram[i:])
 						histogram[i] = t
 
 						break
@@ -115,33 +116,36 @@ func main() {
 		}
 	}
 
+	fmt.Printf("Total Successful Runs: %d\n", runsum)
+	fmt.Printf("Succesful Applies per Month: \n")
+	println(graph)
+
 	count := len(histogram)
 	var sum int64 = 0
 
 	percentiles := make([]float64, 5)
 	counts := make([]int, 5)
 
-
 	for i, v := range histogram {
 		sum += v
 
-		if i == int(math.Floor(float64(count) * .5)) {
+		if i == int(math.Floor(float64(count)*.5)) {
 			percentiles[0] = float64(sum / int64(i))
 			counts[0] = i
 		}
-		if i == int(math.Floor(float64(count) * .75)) {
+		if i == int(math.Floor(float64(count)*.75)) {
 			percentiles[1] = float64(sum / int64(i))
 			counts[1] = i
 		}
-		if i == int(math.Floor(float64(count) * .90)) {
+		if i == int(math.Floor(float64(count)*.90)) {
 			percentiles[2] = float64(sum / int64(i))
 			counts[2] = i
 		}
-		if i == int(math.Floor(float64(count) * .95)) {
+		if i == int(math.Floor(float64(count)*.95)) {
 			percentiles[3] = float64(sum / int64(i))
 			counts[3] = i
 		}
-		if i == int(math.Floor(float64(count) * .99)) {
+		if i == int(math.Floor(float64(count)*.99)) {
 			percentiles[4] = float64(sum / int64(i))
 			counts[4] = i
 		}
@@ -151,11 +155,11 @@ func main() {
 
 	fmt.Printf("\nApply Execution Time Histogram: \n")
 
-	fmt.Printf("p50 [ %4d / %4d ] %10.1fs: %s\n", counts[0], count, percentiles[0] / 1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[0] / (percentiles[4] / 50)) )))
-	fmt.Printf("p75 [ %4d / %4d ] %10.1fs: %s\n", counts[1], count, percentiles[1] / 1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[1] / (percentiles[4] / 50)) )))
-	fmt.Printf("p90 [ %4d / %4d ] %10.1fs: %s\n", counts[2], count, percentiles[2] / 1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[2] / (percentiles[4] / 50)) )))
-	fmt.Printf("p95 [ %4d / %4d ] %10.1fs: %s\n", counts[3], count, percentiles[3] / 1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[3] / (percentiles[4] / 50)) )))
-	fmt.Printf("p99 [ %4d / %4d ] %10.1fs: %s\n", counts[4], count, percentiles[4] / 1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[4] / (percentiles[4] / 50)) )))
+	fmt.Printf("p50 [ %4d / %4d ] %10.1fs: %s\n", counts[0], count, percentiles[0]/1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[0]/(percentiles[4]/50)))))
+	fmt.Printf("p75 [ %4d / %4d ] %10.1fs: %s\n", counts[1], count, percentiles[1]/1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[1]/(percentiles[4]/50)))))
+	fmt.Printf("p90 [ %4d / %4d ] %10.1fs: %s\n", counts[2], count, percentiles[2]/1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[2]/(percentiles[4]/50)))))
+	fmt.Printf("p95 [ %4d / %4d ] %10.1fs: %s\n", counts[3], count, percentiles[3]/1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[3]/(percentiles[4]/50)))))
+	fmt.Printf("p99 [ %4d / %4d ] %10.1fs: %s\n", counts[4], count, percentiles[4]/1000, strings.Repeat(barCharacter, int(math.Floor(percentiles[4]/(percentiles[4]/50)))))
 
 	versionMatrix := map[string]map[string]int{}
 
@@ -165,7 +169,7 @@ func main() {
 	for _, workspace := range workspaces {
 		versionParts := strings.Split(workspace.TerraformVersion, ".")
 
-		majorVersion := versionParts[0] + "." +  versionParts[1]
+		majorVersion := versionParts[0] + "." + versionParts[1]
 		minorVersion := versionParts[2]
 
 		majorVersions = appendVersion(majorVersion, majorVersions, "down")
@@ -174,7 +178,7 @@ func main() {
 		if x, ok := versionMatrix[majorVersion]; ok {
 			x[minorVersion] = x[minorVersion] + 1
 		} else {
-			versionMatrix[majorVersion] = map[string]int {
+			versionMatrix[majorVersion] = map[string]int{
 				minorVersion: 1,
 			}
 
@@ -184,7 +188,7 @@ func main() {
 	fmt.Printf("\n%7s\n", "Version Matrix:")
 
 	for _, minorVersion := range minorVersions {
-		fmt.Printf("%6s", "." + minorVersion + " |")
+		fmt.Printf("%6s", "."+minorVersion+" |")
 		for _, majorValue := range majorVersions {
 			if count, ok := versionMatrix[majorValue][minorVersion]; ok {
 				fmt.Printf("%6d", count)
@@ -218,7 +222,7 @@ func appendVersion(version string, versions []string, sortDirection string) []st
 
 			if v1 < v2 {
 				versions = append(versions, "")
-				copy(versions[i + 1:], versions[i:])
+				copy(versions[i+1:], versions[i:])
 				versions[i] = version
 
 				break
@@ -231,7 +235,7 @@ func appendVersion(version string, versions []string, sortDirection string) []st
 
 			if v1 > v2 {
 				versions = append(versions, "")
-				copy(versions[i + 1:], versions[i:])
+				copy(versions[i+1:], versions[i:])
 				versions[i] = version
 
 				break
@@ -239,7 +243,6 @@ func appendVersion(version string, versions []string, sortDirection string) []st
 				versions = append(versions, version)
 			}
 		}
-
 
 	}
 

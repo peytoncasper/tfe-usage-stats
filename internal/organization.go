@@ -5,7 +5,7 @@ import (
 	"github.com/hashicorp/go-tfe"
 )
 
-func GetOrganizations(client *tfe.Client) ([]*tfe.Organization, error) {
+func GetOrganizations(client *tfe.Client, filterOrg string) ([]*tfe.Organization, error) {
 	organizations := make([]*tfe.Organization, 0)
 
 	currentPage := 0
@@ -22,7 +22,15 @@ func GetOrganizations(client *tfe.Client) ([]*tfe.Organization, error) {
 
 		if err != nil { return nil, err }
 
-		organizations = append(organizations, orgPage.Items...)
+		if filterOrg == "" {
+			organizations = append(organizations, orgPage.Items...)
+		} else if filterOrg != "" {
+			for _, o := range orgPage.Items {
+				if o.Name == filterOrg {
+					organizations = append(organizations, o)
+				}
+			}
+		}
 
 		totalPages = orgPage.TotalPages
 		currentPage++

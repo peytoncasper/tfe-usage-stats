@@ -12,13 +12,16 @@ import (
 	"github.com/evandro-slv/go-cli-charts/bar"
 	tfe "github.com/hashicorp/go-tfe"
 	"github.com/peytoncasper/tfe-usage-stats/internal"
+	"github.com/xuri/excelize/v2"
 )
 
 func main() {
 
 	host := flag.String("host", "https://app.terraform.io", "TFE/C hostname")
 	token := flag.String("token", "", "TFE/C API token")
+	organization := flag.String("organization", "", "TFE/C organization")
 
+	genWorkspaceOwnerSheet := flag.Bool("gen-workspace-owner-sheet", false, "Generate workspace owner spreadsheet")
 	flag.Parse()
 
 	if *token == "" {
@@ -36,16 +39,48 @@ func main() {
 		log.Fatal(err)
 	}
 
-	orgs, err := internal.GetOrganizations(client)
+	orgs, err := internal.GetOrganizations(client, *organization)
 	if err != nil {
 		log.Println(err)
 	}
+
+
+
+
 
 	workspaces, err := internal.GetWorkspaces(client, orgs)
 
 	if err != nil {
 		log.Println(err)
 	}
+
+	if *genWorkspaceOwnerSheet {
+		relationships, err := internal.GetTeamAccessRelationships(client, workspaces)
+		if err != nil {
+			log.Println(err)
+		}
+		ownerSpreadsheet := excelize.NewFile()
+
+		for _, org := range orgs {
+			ownerSpreadsheet.NewSheet(org.Name)
+			ownerSpreadsheet.SetCellValue(org.Name, "A1", "Workspace")
+			ownerSpreadsheet.SetCellValue(org.Name, "B1", "Team")
+		}
+
+		for i, rel := range relationships {
+			ownerSpreadsheet.SetCellValue(rel.Workspace.Organization.Name, fmt.Sprintf("A%d", i+2), rel.Workspace.Name)
+			ownerSpreadsheet.SetCellValue(rel.Workspace.Organization.Name, fmt.Sprintf("B%d", i+2), rel.Team.Name)
+
+		}
+
+		ownerSpreadsheet.DeleteSheet("Sheet1")
+
+		// Save spreadsheet by the given path.
+		if err := ownerSpreadsheet.SaveAs("workspace_owners.xlsx"); err != nil {
+			fmt.Println(err)
+		}
+	}
+
 
 	teams, err := internal.GetTeams(client, orgs)
 

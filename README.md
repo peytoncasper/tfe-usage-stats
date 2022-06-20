@@ -29,7 +29,9 @@ The Organization flag will limit the scope to a specific organization. This can 
 go build cmd/tfe-usage-stats.go
 ```
 
+# Packaging
 
+```
 GOOS=windows GOARCH=amd64 go build -o bin/windows/tfe-usage-stats.exe cmd/tfe-usage-stats.go
 GOOS=darwin GOARCH=amd64 go build -o bin/mac/tfe-usage-stats cmd/tfe-usage-stats.go
 GOOS=darwin GOARCH=arm64 go build -o bin/mac-arm/tfe-usage-stats cmd/tfe-usage-stats.go
@@ -39,3 +41,4 @@ cd bin/windows && zip Windows.zip tfe-usage-stats.exe && cd ../..
 cd bin/mac && zip Mac_x64.zip tfe-usage-stats && chmod +x tfe-usage-stats && cd ../..
 cd bin/mac-arm && zip Mac_Arm.zip tfe-usage-stats && chmod +x tfe-usage-stats && cd ../..
 cd bin/linux && zip Linux.zip tfe-usage-stats && chmod +x tfe-usage-stats && cd ../..
+```

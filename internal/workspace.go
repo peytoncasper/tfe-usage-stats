@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/hashicorp/go-tfe"
 	"github.com/peytoncasper/tfe-usage-stats/log"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -53,6 +54,8 @@ func getOrganizationWorkspaces(client *tfe.Client, organization *tfe.Organizatio
 		}
 
 		workspaces = append(workspaces, workspacePage.Items...)
+		log.Debug("added workspaces", zap.Int("count", len(workspaces)))
+		log.Debug("page", zap.Int("current", currentPage), zap.Int("total", totalPages))
 
 		totalPages = workspacePage.TotalPages
 		currentPage++

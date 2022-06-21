@@ -3,6 +3,8 @@ package internal
 import (
 	"context"
 	"github.com/hashicorp/go-tfe"
+	"github.com/peytoncasper/tfe-usage-stats/log"
+	"time"
 )
 
 func GetWorkspaces(client *tfe.Client, organizations []*tfe.Organization) ([]*tfe.Workspace, error) {
@@ -10,7 +12,9 @@ func GetWorkspaces(client *tfe.Client, organizations []*tfe.Organization) ([]*tf
 
 	for _, org := range organizations {
 		orgWorkspaces, err := getOrganizationWorkspaces(client, org)
-		if err != nil { return nil, err }
+		if err != nil {
+			return workspaces, err
+		}
 
 		workspaces = append(workspaces, orgWorkspaces...)
 	}
@@ -33,7 +37,20 @@ func getOrganizationWorkspaces(client *tfe.Client, organization *tfe.Organizatio
 			},
 		})
 
-		if err != nil { return nil, err }
+		if err != nil {
+			log.Error("error getting workspace page, retrying in 10 seconds")
+			time.Sleep(10 * time.Second)
+			workspacePage, err = getWorkspacePage(client, organization.Name, tfe.WorkspaceListOptions{
+				ListOptions: tfe.ListOptions{
+					PageNumber: currentPage,
+					PageSize:   pageSize,
+				},
+			})
+
+			if err != nil {
+				return workspaces, err
+			}
+		}
 
 		workspaces = append(workspaces, workspacePage.Items...)
 

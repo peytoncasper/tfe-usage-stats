@@ -13,11 +13,12 @@ func GetWorkspaces(client *tfe.Client, organizations []*tfe.Organization) ([]*tf
 
 	for _, org := range organizations {
 		orgWorkspaces, err := getOrganizationWorkspaces(client, org)
+		workspaces = append(workspaces, orgWorkspaces...)
+
 		if err != nil {
-			return workspaces, err
+			return orgWorkspaces, err
 		}
 
-		workspaces = append(workspaces, orgWorkspaces...)
 	}
 
 	return workspaces, nil
@@ -28,7 +29,7 @@ func getOrganizationWorkspaces(client *tfe.Client, organization *tfe.Organizatio
 
 	currentPage := 0
 	totalPages := 1
-	pageSize := 10
+	pageSize := 20
 
 	for currentPage < totalPages {
 		workspacePage, err := getWorkspacePage(client, organization.Name, tfe.WorkspaceListOptions{

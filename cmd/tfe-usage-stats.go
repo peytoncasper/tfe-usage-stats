@@ -3,7 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
+	"github.com/peytoncasper/tfe-usage-stats/log"
+	"go.uber.org/zap"
 	"math"
 	"os"
 	"strconv"
@@ -25,7 +26,7 @@ func main() {
 	flag.Parse()
 
 	if *token == "" {
-		log.Println("API Token Not Provided")
+		log.Error("API Token Not Provided")
 		os.Exit(1)
 	}
 
@@ -36,13 +37,14 @@ func main() {
 
 	client, err := tfe.NewClient(config)
 	if err != nil {
-		log.Fatal(err)
+		log.Error("error creating tfc client", zap.Error(err))
 	}
 
 	orgs, err := internal.GetOrganizations(client, *organization)
 	if err != nil {
-		log.Println(err)
+		log.Error("error getting tfc organizations", zap.Error(err))
 	}
+	log.Debug("total organizations" ,zap.Int("count", len(orgs)))
 
 
 
@@ -51,14 +53,17 @@ func main() {
 	workspaces, err := internal.GetWorkspaces(client, orgs)
 
 	if err != nil {
-		log.Println(err)
+		log.Error("error getting tfc workspaces", zap.Error(err))
 	}
+	log.Debug("total workspaces" ,zap.Int("count", len(workspaces)))
 
 	if *genWorkspaceOwnerSheet {
 		relationships, err := internal.GetTeamAccessRelationships(client, workspaces)
 		if err != nil {
-			log.Println(err)
+			log.Error("error getting team access relationships", zap.Error(err))
 		}
+		log.Debug("total team relationships" ,zap.Int("count", len(relationships)))
+
 		ownerSpreadsheet := excelize.NewFile()
 
 		for _, org := range orgs {
@@ -85,7 +90,9 @@ func main() {
 	teams, err := internal.GetTeams(client, orgs)
 
 	if err != nil {
-		log.Println(err)
+		log.Error("error getting teams", zap.Error(err))
+	} else {
+		log.Debug("total teams" ,zap.Int("count", len(teams)))
 	}
 
 	runs, err := internal.GetRuns(client, workspaces)

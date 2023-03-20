@@ -5,6 +5,13 @@
 ```
 # Optional Flags
 
+Generate Workspace Resource Count Sheet will generate a spreadsheet in the current directory that lists out all the workspaces and their current resource count
+
+```
+--workspace-resource-sheet=true 
+```
+
+
 Generate Workspace Owners Sheet will generate a spreadsheet in the current directory that lists out all the team/workspace relationships in the respective organizations
 
 ```

@@ -23,7 +23,7 @@ func main() {
 	organization := flag.String("organization", "", "TFE/C organization")
 
 	genWorkspaceOwnerSheet := flag.Bool("gen-workspace-owner-sheet", false, "Generate workspace owner spreadsheet")
-	genWorkspaceResourceCountSheet := flag.Bool("workspace_resource_sheet", false, "Generate workspace resource count sheet")
+	genWorkspaceResourceCountSheet := flag.Bool("workspace-resource-sheet", false, "Generate workspace resource count sheet")
 
 	flag.Parse()
 

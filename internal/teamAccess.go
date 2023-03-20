@@ -29,12 +29,12 @@ func getWorkspaceTeamAccessRelationships(client *tfe.Client, workspace *tfe.Work
 	relationships := []*tfe.TeamAccess{}
 
 	for currentPage < totalPages {
-		relationshipsPage, err := getTeamAccessPage(client, workspace.ID, tfe.TeamAccessListOptions{
+		relationshipsPage, err := getTeamAccessPage(client, workspace.ID, &tfe.TeamAccessListOptions{
 			ListOptions: tfe.ListOptions{
 				PageNumber: currentPage,
 				PageSize:   pageSize,
 			},
-			WorkspaceID: &workspace.ID,
+			WorkspaceID: workspace.ID,
 		})
 
 		if err != nil {
@@ -55,7 +55,7 @@ func getWorkspaceTeamAccessRelationships(client *tfe.Client, workspace *tfe.Work
 	return relationships, nil
 }
 
-func getTeamAccessPage(client *tfe.Client, workspaceId string, options tfe.TeamAccessListOptions) (*tfe.TeamAccessList, error) {
+func getTeamAccessPage(client *tfe.Client, workspaceId string, options *tfe.TeamAccessListOptions) (*tfe.TeamAccessList, error) {
 	relationships, err := client.TeamAccess.List(context.Background(), options)
 	if err != nil {
 		return nil, err

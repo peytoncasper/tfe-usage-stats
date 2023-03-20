@@ -36,7 +36,7 @@ func getWorkspaceRuns(client *tfe.Client, workspace *tfe.Workspace, runs map[str
 	pageSize := 30
 
 	for currentPage < totalPages {
-		runPage, err := getRunPage(client, workspace.ID, tfe.RunListOptions{
+		runPage, err := getRunPage(client, workspace.ID, &tfe.RunListOptions{
 			ListOptions: tfe.ListOptions{
 				PageNumber: currentPage,
 				PageSize:   pageSize,
@@ -95,7 +95,7 @@ func getWorkspaceRuns(client *tfe.Client, workspace *tfe.Workspace, runs map[str
 	return nil
 }
 
-func getRunPage(client *tfe.Client, workspaceId string, options tfe.RunListOptions) (*tfe.RunList, error) {
+func getRunPage(client *tfe.Client, workspaceId string, options *tfe.RunListOptions) (*tfe.RunList, error) {
 	runs, err := client.Runs.List(context.Background(), workspaceId, options)
 	if err != nil {
 		return nil, err

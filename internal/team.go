@@ -10,7 +10,9 @@ func GetTeams(client *tfe.Client, organizations []*tfe.Organization) ([]*tfe.Tea
 
 	for _, org := range organizations {
 		orgTeams, err := getOrganizationTeams(client, org)
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 
 		teams = append(teams, orgTeams...)
 	}
@@ -26,14 +28,16 @@ func getOrganizationTeams(client *tfe.Client, organization *tfe.Organization) ([
 	pageSize := 10
 
 	for currentPage < totalPages {
-		teamPage, err := getTeamPage(client, organization.Name, tfe.TeamListOptions{
+		teamPage, err := getTeamPage(client, organization.Name, &tfe.TeamListOptions{
 			ListOptions: tfe.ListOptions{
 				PageNumber: currentPage,
 				PageSize:   pageSize,
 			},
 		})
 
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 
 		teams = append(teams, teamPage.Items...)
 
@@ -44,7 +48,7 @@ func getOrganizationTeams(client *tfe.Client, organization *tfe.Organization) ([
 	return teams, nil
 }
 
-func getTeamPage(client *tfe.Client, organizationName string, options tfe.TeamListOptions) (*tfe.TeamList, error) {
+func getTeamPage(client *tfe.Client, organizationName string, options *tfe.TeamListOptions) (*tfe.TeamList, error) {
 	teams, err := client.Teams.List(context.Background(), organizationName, options)
 	if err != nil {
 		return nil, err

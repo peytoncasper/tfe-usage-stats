@@ -23,6 +23,8 @@ func main() {
 	organization := flag.String("organization", "", "TFE/C organization")
 
 	genWorkspaceOwnerSheet := flag.Bool("gen-workspace-owner-sheet", false, "Generate workspace owner spreadsheet")
+	genWorkspaceResourceCountSheet := flag.Bool("workspace_resource_sheet", false, "Generate workspace resource count sheet")
+
 	flag.Parse()
 
 	if *token == "" {
@@ -44,25 +46,44 @@ func main() {
 	if err != nil {
 		log.Error("error getting tfc organizations", zap.Error(err))
 	}
-	log.Debug("total organizations" ,zap.Int("count", len(orgs)))
-
-
-
-
+	log.Debug("total organizations", zap.Int("count", len(orgs)))
 
 	workspaces, err := internal.GetWorkspaces(client, orgs)
 
 	if err != nil {
 		log.Error("error getting tfc workspaces", zap.Error(err))
 	}
-	log.Debug("total workspaces" ,zap.Int("count", len(workspaces)))
+	log.Debug("total workspaces", zap.Int("count", len(workspaces)))
+
+	if *genWorkspaceResourceCountSheet {
+		resourceCountSheet := excelize.NewFile()
+
+		for _, org := range orgs {
+			resourceCountSheet.NewSheet(org.Name)
+			resourceCountSheet.SetCellValue(org.Name, "A1", "Workspace")
+			resourceCountSheet.SetCellValue(org.Name, "B1", "Resource Count")
+		}
+
+		for i, workspace := range workspaces {
+			resourceCountSheet.SetCellValue(workspace.Organization.Name, fmt.Sprintf("A%d", i+2), workspace.Name)
+			resourceCountSheet.SetCellValue(workspace.Organization.Name, fmt.Sprintf("B%d", i+2), workspace.ResourceCount)
+
+		}
+
+		resourceCountSheet.DeleteSheet("Sheet1")
+
+		// Save spreadsheet by the given path.
+		if err := resourceCountSheet.SaveAs("workspace_resource_count.xlsx"); err != nil {
+			fmt.Println(err)
+		}
+	}
 
 	if *genWorkspaceOwnerSheet {
 		relationships, err := internal.GetTeamAccessRelationships(client, workspaces)
 		if err != nil {
 			log.Error("error getting team access relationships", zap.Error(err))
 		}
-		log.Debug("total team relationships" ,zap.Int("count", len(relationships)))
+		log.Debug("total team relationships", zap.Int("count", len(relationships)))
 
 		ownerSpreadsheet := excelize.NewFile()
 
@@ -86,13 +107,12 @@ func main() {
 		}
 	}
 
-
 	teams, err := internal.GetTeams(client, orgs)
 
 	if err != nil {
 		log.Error("error getting teams", zap.Error(err))
 	} else {
-		log.Debug("total teams" ,zap.Int("count", len(teams)))
+		log.Debug("total teams", zap.Int("count", len(teams)))
 	}
 
 	runs, err := internal.GetRuns(client, workspaces)
@@ -137,7 +157,7 @@ func main() {
 
 	for _, m := range runs {
 		for _, r := range m {
-			t := r.StatusTimestamps.AppliedAt.Sub(r.StatusTimestamps.PlanQueuabledAt).Milliseconds()
+			t := r.StatusTimestamps.AppliedAt.Sub(r.StatusTimestamps.PlanQueueableAt).Milliseconds()
 			runsum += 1
 
 			if len(histogram) > 0 {

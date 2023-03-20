@@ -13,14 +13,16 @@ func GetOrganizations(client *tfe.Client, filterOrg string) ([]*tfe.Organization
 	pageSize := 10
 
 	for currentPage < totalPages {
-		orgPage, err := getOrganizationPage(client, tfe.OrganizationListOptions{
+		orgPage, err := getOrganizationPage(client, &tfe.OrganizationListOptions{
 			ListOptions: tfe.ListOptions{
 				PageNumber: currentPage,
 				PageSize:   pageSize,
 			},
 		})
 
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 
 		if filterOrg == "" {
 			organizations = append(organizations, orgPage.Items...)
@@ -39,7 +41,7 @@ func GetOrganizations(client *tfe.Client, filterOrg string) ([]*tfe.Organization
 	return organizations, nil
 }
 
-func getOrganizationPage(client *tfe.Client, options tfe.OrganizationListOptions) (*tfe.OrganizationList, error) {
+func getOrganizationPage(client *tfe.Client, options *tfe.OrganizationListOptions) (*tfe.OrganizationList, error) {
 	organizations, err := client.Organizations.List(context.Background(), options)
 	if err != nil {
 		return nil, err

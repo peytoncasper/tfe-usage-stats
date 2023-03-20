@@ -32,7 +32,7 @@ func getOrganizationWorkspaces(client *tfe.Client, organization *tfe.Organizatio
 	pageSize := 20
 
 	for currentPage < totalPages {
-		workspacePage, err := getWorkspacePage(client, organization.Name, tfe.WorkspaceListOptions{
+		workspacePage, err := getWorkspacePage(client, organization.Name, &tfe.WorkspaceListOptions{
 			ListOptions: tfe.ListOptions{
 				PageNumber: currentPage,
 				PageSize:   pageSize,
@@ -42,7 +42,7 @@ func getOrganizationWorkspaces(client *tfe.Client, organization *tfe.Organizatio
 		if err != nil {
 			log.Error("error getting workspace page, retrying in 10 seconds")
 			time.Sleep(10 * time.Second)
-			workspacePage, err = getWorkspacePage(client, organization.Name, tfe.WorkspaceListOptions{
+			workspacePage, err = getWorkspacePage(client, organization.Name, &tfe.WorkspaceListOptions{
 				ListOptions: tfe.ListOptions{
 					PageNumber: currentPage,
 					PageSize:   pageSize,
@@ -65,7 +65,7 @@ func getOrganizationWorkspaces(client *tfe.Client, organization *tfe.Organizatio
 	return workspaces, nil
 }
 
-func getWorkspacePage(client *tfe.Client, organizationName string, options tfe.WorkspaceListOptions) (*tfe.WorkspaceList, error) {
+func getWorkspacePage(client *tfe.Client, organizationName string, options *tfe.WorkspaceListOptions) (*tfe.WorkspaceList, error) {
 	workspaces, err := client.Workspaces.List(context.Background(), organizationName, options)
 	if err != nil {
 		return nil, err

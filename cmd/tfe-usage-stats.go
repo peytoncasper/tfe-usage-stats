@@ -24,6 +24,7 @@ func main() {
 
 	genWorkspaceOwnerSheet := flag.Bool("gen-workspace-owner-sheet", false, "Generate workspace owner spreadsheet")
 	genWorkspaceResourceCountSheet := flag.Bool("workspace-resource-sheet", false, "Generate workspace resource count sheet")
+	genStatsSheet := flag.Bool("stats-sheet", false, "Generate stats spreadsheet")
 
 	flag.Parse()
 
@@ -222,6 +223,35 @@ func main() {
 	fmt.Printf("p90 [ %4d / %4d ] %10.1fs: %s\n", counts[2], count, percentiles[2]/1000, strings.Repeat(barCharacter, int(math.Abs(math.Floor(percentiles[2]/(percentiles[4]/50))))))
 	fmt.Printf("p95 [ %4d / %4d ] %10.1fs: %s\n", counts[3], count, percentiles[3]/1000, strings.Repeat(barCharacter, int(math.Abs(math.Floor(percentiles[3]/(percentiles[4]/50))))))
 	fmt.Printf("p99 [ %4d / %4d ] %10.1fs: %s\n", counts[4], count, percentiles[4]/1000, strings.Repeat(barCharacter, int(math.Abs(math.Floor(percentiles[4]/(percentiles[4]/50))))))
+
+	if *genStatsSheet {
+		statsSheet := excelize.NewFile()
+
+		sheetName := "Stats"
+
+		statsSheet.NewSheet(sheetName)
+		statsSheet.SetCellValue(sheetName, "A1", "Users")
+		statsSheet.SetCellValue(sheetName, "B1", "Total Workspaces")
+
+		statsSheet.SetCellValue(sheetName, "A2", users)
+		statsSheet.SetCellValue(sheetName, "B2", len(workspaces))
+
+		statsSheet.SetCellValue(sheetName, "A4", "Applies Per Month")
+
+		i := 0
+		for k, v := range runs {
+			statsSheet.SetCellValue(sheetName, fmt.Sprintf("A%d", i+4), k)
+			statsSheet.SetCellValue(sheetName, fmt.Sprintf("B%d", i+4), len(v))
+			i++
+		}
+
+		statsSheet.DeleteSheet("Sheet1")
+
+		// Save spreadsheet by the given path.
+		if err := statsSheet.SaveAs("stats_sheet.xlsx"); err != nil {
+			fmt.Println(err)
+		}
+	}
 
 	versionMatrix := map[string]map[string]int{}
 

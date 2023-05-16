@@ -7,8 +7,9 @@ import (
 	tfe "github.com/hashicorp/go-tfe"
 )
 
-func GetRuns(client *tfe.Client, workspaces []*tfe.Workspace) (map[string][]*tfe.Run, error) {
+func GetRuns(client *tfe.Client, workspaces []*tfe.Workspace) (map[string][]*tfe.Run, map[string]int, error) {
 	runs := map[string][]*tfe.Run{}
+	runsByWorkspace := map[string]int{}
 
 	now := time.Now()
 	for i := 0; i <= 11; i++ {
@@ -16,9 +17,9 @@ func GetRuns(client *tfe.Client, workspaces []*tfe.Workspace) (map[string][]*tfe
 	}
 
 	for _, workspace := range workspaces {
-		err := getWorkspaceRuns(client, workspace, runs)
+		err := getWorkspaceRuns(client, workspace, runs, runsByWorkspace)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		//print(workspaceRuns)
@@ -26,10 +27,10 @@ func GetRuns(client *tfe.Client, workspaces []*tfe.Workspace) (map[string][]*tfe
 		//	runs = append(runs, workspaceRuns...)
 	}
 
-	return runs, nil
+	return runs, runsByWorkspace, nil
 }
 
-func getWorkspaceRuns(client *tfe.Client, workspace *tfe.Workspace, runs map[string][]*tfe.Run) error {
+func getWorkspaceRuns(client *tfe.Client, workspace *tfe.Workspace, runs map[string][]*tfe.Run, runsByWorkspace map[string]int) error {
 
 	currentPage := 0
 	totalPages := 1
@@ -54,6 +55,12 @@ func getWorkspaceRuns(client *tfe.Client, workspace *tfe.Workspace, runs map[str
 
 				if list, ok := runs[key]; ok {
 					runs[key] = append(list, run)
+				}
+
+				if _, ok := runsByWorkspace[workspace.Name]; ok {
+					runsByWorkspace[workspace.Name] += 1
+				} else {
+					runsByWorkspace[workspace.Name] = 1
 				}
 			}
 

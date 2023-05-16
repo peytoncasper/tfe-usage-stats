@@ -24,6 +24,7 @@ func main() {
 
 	genWorkspaceOwnerSheet := flag.Bool("gen-workspace-owner-sheet", false, "Generate workspace owner spreadsheet")
 	genWorkspaceResourceCountSheet := flag.Bool("workspace-resource-sheet", false, "Generate workspace resource count sheet")
+	genWorkspaceApplySheet := flag.Bool("workspace-apply-sheet", false, "Generate workspace apply count sheet")
 	genStatsSheet := flag.Bool("stats-sheet", false, "Generate stats spreadsheet")
 
 	flag.Parse()
@@ -63,6 +64,7 @@ func main() {
 			resourceCountSheet.NewSheet(org.Name)
 			resourceCountSheet.SetCellValue(org.Name, "A1", "Workspace")
 			resourceCountSheet.SetCellValue(org.Name, "B1", "Resource Count")
+
 		}
 
 		for i, workspace := range workspaces {
@@ -116,7 +118,29 @@ func main() {
 		log.Debug("total teams", zap.Int("count", len(teams)))
 	}
 
-	runs, err := internal.GetRuns(client, workspaces)
+	runs, runsByWorkspace, err := internal.GetRuns(client, workspaces)
+
+	if *genWorkspaceApplySheet {
+		applyCountSheet := excelize.NewFile()
+
+		for _, org := range orgs {
+			applyCountSheet.NewSheet(org.Name)
+			applyCountSheet.SetCellValue(org.Name, "A1", "Workspace")
+			applyCountSheet.SetCellValue(org.Name, "B1", "Apply Count")
+		}
+
+		for i, workspace := range workspaces {
+			applyCountSheet.SetCellValue(workspace.Organization.Name, fmt.Sprintf("A%d", i+2), workspace.Name)
+			applyCountSheet.SetCellValue(workspace.Organization.Name, fmt.Sprintf("B%d", i+2), runsByWorkspace[workspace.Name])
+		}
+
+		applyCountSheet.DeleteSheet("Sheet1")
+
+		// Save spreadsheet by the given path.
+		if err := applyCountSheet.SaveAs("workspace_apply_count.xlsx"); err != nil {
+			fmt.Println(err)
+		}
+	}
 
 	users := map[string]int{}
 	for _, t := range teams {
